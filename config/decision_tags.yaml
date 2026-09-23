@@ -1,0 +1,31 @@
+# Tier 1 トリガー判定用の D-n タグ語彙（tools/tier1_triggers.py が読む・D-39）
+#
+# product-brief.md §5.1 決定ログの「タグ」列にはここに列挙した slug だけを書く（閉じた語彙）。
+# 未知の slug は判定に使わず、語彙拡張の候補として記録するだけに留める（fail-safe・D-39）。
+# 自然文の言い回し（比喩表現等）では判定しない — document-catalog.md §3.1 が定める
+# 「D-n の構造化シグナルで判定する」原則を、この閉じた語彙で機械可読にしたもの。
+#
+# 各 tag の triggers は docs/02_requirements/document-catalog.md §2 Tier 1 表の ID。
+# T1-1（初期要件）・T1-3（インセプションデッキ）の一部・T1-4/T1-5（ストーリーマップ/ロードマップ）は
+# D-n タグではなく別シグナル（ユーザー発言・sp 見積もり）で判定するため、ここには載らない
+# （tools/tier1_triggers.py の detect_candidates が個別引数で扱う）。
+
+tags:
+  payment:
+    description: 決済・課金 API・価格プランの選定
+    triggers: [T1-2]
+  stakeholder:
+    description: 自分以外の意思決定者（チーム・共同創業者・投資家・審査者）への言及
+    triggers: [T1-3]
+  architecture:
+    description: アーキテクチャ様式（レイヤード・ヘキサゴナル等）または複数モジュールの責務分割
+    triggers: [T1-6]
+  frontend:
+    description: フロントエンド技術（React / Vue / HTML 等）の選定
+    triggers: [T1-7, T1-8]
+  design_tone:
+    description: トンマナ・配色・ブランドへの言及（frontend と併用したとき T1-7 が成立する）
+    triggers: [T1-7]
+  deploy:
+    description: デプロイ先・ホスティング・ランタイム基盤の選定
+    triggers: [T1-9]
