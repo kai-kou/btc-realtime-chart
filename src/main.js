@@ -37,11 +37,11 @@ function refreshSignals() {
 }
 
 const controller = new FeedController(feeds, {
-  onReset: (cs) => {
+  onReset: (cs, { keepView = false } = {}) => {
     candles = cs;
     recompute();
     signals = detectSignals(candles, ind);
-    chart.setAll(candles, ind, signals);
+    chart.setAll(candles, ind, signals, { jump: !keepView });
     renderedTime = candles.at(-1)?.time ?? -Infinity;
     panel.renderPrice(candles, ind, controller.feed.pair);
     panel.renderSignals(signals);

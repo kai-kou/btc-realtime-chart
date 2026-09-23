@@ -9,7 +9,7 @@ const FAILOVER_AFTER_FAILURES = 3;
 export class FeedController {
   constructor(feeds, { onReset, onUpdate, onStatus, onFeedChange, clock = () => Date.now() }) {
     this.feeds = feeds;
-    this.onReset = onReset; // (candles) full replace
+    this.onReset = onReset; // (candles, { keepView }) full replace; keepView = gap refill, do not move the viewport
     this.onUpdate = onUpdate; // (candles, { closed }) incremental
     this.onStatus = onStatus;
     this.onFeedChange = onFeedChange ?? (() => {});
@@ -35,6 +35,7 @@ export class FeedController {
     const gen = ++this.generation;
     this.sub?.stop();
     this.sub = null;
+    this.hadConnection = false; // the first open of a new subscription is not a reconnect
     this.onFeedChange(this.feed);
     this.onStatus({ state: 'loading' });
     try {
@@ -120,7 +121,7 @@ export class FeedController {
       const last = this.candles[this.candles.length - 1];
       const merged = last && history.length && last.time > history[history.length - 1].time ? [...history, last] : history;
       this.candles = trimTo(merged, MAX_CANDLES);
-      this.onReset(this.candles);
+      this.onReset(this.candles, { keepView: true });
     } catch {
       /* stream keeps running; next reconnect retries */
     }

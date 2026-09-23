@@ -87,3 +87,21 @@ test('failover backs off exponentially while every feed keeps failing', async (t
   assert.deepEqual(delays.slice(0, 4), [500, 1000, 2000, 4000]);
   assert.equal(Math.max(...delays), 30000);
 });
+
+test('refetches history only on a real reconnect and keeps the viewport', async () => {
+  let loads = 0;
+  const a = fakeFeed('a');
+  const load = a.loadHistory.bind(a);
+  a.loadHistory = async (i) => { loads++; return load(i); };
+  const resets = [];
+  const ctl = new FeedController([a], { onReset: (cs, opts) => resets.push(opts ?? {}), onUpdate: () => {}, onStatus: () => {} });
+  await ctl.start('1m');
+  a.subs[0].handlers.onStatus({ state: 'open' }); // first open: no refetch
+  await ctl.start('5m');
+  a.subs[1].handlers.onStatus({ state: 'open' }); // first open after an interval switch: no refetch
+  assert.equal(loads, 2);
+  a.subs[1].handlers.onStatus({ state: 'open' }); // reopen = reconnect: refetch
+  await new Promise((r) => setImmediate(r));
+  assert.equal(loads, 3);
+  assert.equal(resets.at(-1).keepView, true);
+});
