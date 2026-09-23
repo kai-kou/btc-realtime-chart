@@ -1,0 +1,18 @@
+{
+  "name": "btc-realtime-chart",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "build": "node build.mjs",
+    "dev": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "wrangler": "^4.136.3"
+  },
+  "dependencies": {
+    "lightweight-charts": "^5.2.1"
+  }
+}
