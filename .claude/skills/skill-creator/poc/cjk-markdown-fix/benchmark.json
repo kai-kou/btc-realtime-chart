@@ -1,0 +1,206 @@
+{
+  "exit_reason": "all_passed (iteration 2)",
+  "original_body": "# CJK Markdown 半角スペース修正\n\nCJK（漢字・ひらがな・カタカナ等）本文中の **強調**（太字）記法の前後に半角スペースを入れてください（例:「これは重要です」→「これは **重要** です」）。この修正はインラインコード（`code`）には適用しません。\n\n入力テキストを、このルールに従って修正してください。修正後の本文だけを出力してください（説明・前置き・コードフェンス不要）。\n",
+  "best_body": "# CJK Markdown 半角スペース修正\n\nCJK（漢字・ひらがな・カタカナ等）本文中の **強調**（太字）記法およびインラインコード（`code`）の前後に半角スペースを入れてください（例:「これは重要です」→「これは **重要** です」、「これはコードです」→「これは `コード` です」）。\n\n入力テキストを、このルールに従って修正してください。修正後の本文だけを出力してください（説明・前置き・コードフェンス不要）。",
+  "best_score": "4/4",
+  "best_train_score": "6/6",
+  "best_test_score": "4/4",
+  "final_body": "# CJK Markdown 半角スペース修正\n\nCJK（漢字・ひらがな・カタカナ等）本文中の **強調**（太字）記法およびインラインコード（`code`）の前後に半角スペースを入れてください（例:「これは重要です」→「これは **重要** です」、「これはコードです」→「これは `コード` です」）。\n\n入力テキストを、このルールに従って修正してください。修正後の本文だけを出力してください（説明・前置き・コードフェンス不要）。",
+  "accepted_edits": 1,
+  "rejected_edits": 0,
+  "iterations_run": 2,
+  "holdout": 0.4,
+  "train_size": 6,
+  "test_size": 4,
+  "history": [
+    {
+      "iteration": 1,
+      "body": "# CJK Markdown 半角スペース修正\n\nCJK（漢字・ひらがな・カタカナ等）本文中の **強調**（太字）記法の前後に半角スペースを入れてください（例:「これは重要です」→「これは **重要** です」）。この修正はインラインコード（`code`）には適用しません。\n\n入力テキストを、このルールに従って修正してください。修正後の本文だけを出力してください（説明・前置き・コードフェンス不要）。\n",
+      "train_passed": 4,
+      "train_failed": 2,
+      "train_total": 6,
+      "train_results": [
+        {
+          "id": 5,
+          "category": "bold",
+          "input_text": "英語 **bold** text",
+          "output_text": "英語 **bold** text",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        },
+        {
+          "id": 7,
+          "category": "bold",
+          "input_text": "**先頭**から始まる文章です",
+          "output_text": "**先頭** から始まる文章です",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        },
+        {
+          "id": 1,
+          "category": "bold",
+          "input_text": "これは**重要**です",
+          "output_text": "これは **重要** です",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        },
+        {
+          "id": 2,
+          "category": "code",
+          "input_text": "これは`コード`です",
+          "output_text": "これは`コード`です",
+          "pass": false,
+          "checker_output": "[cjk-md] /tmp/tmp2akfcat8.md:1: CJK 記法の前後に半角スペース不足 → これは`コード`です\n\n[cjk-md] Warning: CJK 半角スペース違反 1 行。\n  → 自動整形: python3 tools/check_cjk_markdown.py --fix <file>"
+        },
+        {
+          "id": 10,
+          "category": "code",
+          "input_text": "code `snippet` example",
+          "output_text": "code `snippet` example",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        },
+        {
+          "id": 4,
+          "category": "code",
+          "input_text": "値は`x`、次は`y`です",
+          "output_text": "値は`x`、次は`y`です",
+          "pass": false,
+          "checker_output": "[cjk-md] /tmp/tmpyz3gq8uy.md:1: CJK 記法の前後に半角スペース不足 → 値は`x`、次は`y`です\n\n[cjk-md] Warning: CJK 半角スペース違反 1 行。\n  → 自動整形: python3 tools/check_cjk_markdown.py --fix <file>"
+        }
+      ],
+      "test_passed": 2,
+      "test_failed": 2,
+      "test_total": 4,
+      "test_results": [
+        {
+          "id": 6,
+          "category": "bold",
+          "input_text": "見出しの**注意点**を読む",
+          "output_text": "見出しの **注意点** を読む",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        },
+        {
+          "id": 3,
+          "category": "bold",
+          "input_text": "「**強調**」の話",
+          "output_text": "「 **強調** 」の話",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        },
+        {
+          "id": 9,
+          "category": "code",
+          "input_text": "変数`bar`と`baz`を使う",
+          "output_text": "変数`bar`と`baz`を使う",
+          "pass": false,
+          "checker_output": "[cjk-md] /tmp/tmpd7shmshf.md:1: CJK 記法の前後に半角スペース不足 → 変数`bar`と`baz`を使う\n\n[cjk-md] Warning: CJK 半角スペース違反 1 行。\n  → 自動整形: python3 tools/check_cjk_markdown.py --fix <file>"
+        },
+        {
+          "id": 8,
+          "category": "code",
+          "input_text": "関数`foo`を呼ぶ",
+          "output_text": "関数`foo`を呼ぶ",
+          "pass": false,
+          "checker_output": "[cjk-md] /tmp/tmpv1p2ccl8.md:1: CJK 記法の前後に半角スペース不足 → 関数`foo`を呼ぶ\n\n[cjk-md] Warning: CJK 半角スペース違反 1 行。\n  → 自動整形: python3 tools/check_cjk_markdown.py --fix <file>"
+        }
+      ]
+    },
+    {
+      "iteration": 2,
+      "body": "# CJK Markdown 半角スペース修正\n\nCJK（漢字・ひらがな・カタカナ等）本文中の **強調**（太字）記法およびインラインコード（`code`）の前後に半角スペースを入れてください（例:「これは重要です」→「これは **重要** です」、「これはコードです」→「これは `コード` です」）。\n\n入力テキストを、このルールに従って修正してください。修正後の本文だけを出力してください（説明・前置き・コードフェンス不要）。",
+      "train_passed": 6,
+      "train_failed": 0,
+      "train_total": 6,
+      "train_results": [
+        {
+          "id": 5,
+          "category": "bold",
+          "input_text": "英語 **bold** text",
+          "output_text": "英語 **bold** text",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        },
+        {
+          "id": 7,
+          "category": "bold",
+          "input_text": "**先頭**から始まる文章です",
+          "output_text": "**先頭** から始まる文章です",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        },
+        {
+          "id": 1,
+          "category": "bold",
+          "input_text": "これは**重要**です",
+          "output_text": "これは **重要** です",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        },
+        {
+          "id": 2,
+          "category": "code",
+          "input_text": "これは`コード`です",
+          "output_text": "これは `コード` です",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        },
+        {
+          "id": 10,
+          "category": "code",
+          "input_text": "code `snippet` example",
+          "output_text": "code ` snippet ` example",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        },
+        {
+          "id": 4,
+          "category": "code",
+          "input_text": "値は`x`、次は`y`です",
+          "output_text": "値は `x`、次は `y` です",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        }
+      ],
+      "test_passed": 4,
+      "test_failed": 0,
+      "test_total": 4,
+      "test_results": [
+        {
+          "id": 6,
+          "category": "bold",
+          "input_text": "見出しの**注意点**を読む",
+          "output_text": "見出しの **注意点** を読む",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        },
+        {
+          "id": 3,
+          "category": "bold",
+          "input_text": "「**強調**」の話",
+          "output_text": "「 **強調** 」の話",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        },
+        {
+          "id": 9,
+          "category": "code",
+          "input_text": "変数`bar`と`baz`を使う",
+          "output_text": "変数 `bar` と `baz` を使う",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        },
+        {
+          "id": 8,
+          "category": "code",
+          "input_text": "関数`foo`を呼ぶ",
+          "output_text": "関数 `foo` を呼ぶ",
+          "pass": true,
+          "checker_output": "[cjk-md] OK（CJK 半角スペース違反なし）"
+        }
+      ]
+    }
+  ],
+  "elapsed_seconds": 186.4
+}

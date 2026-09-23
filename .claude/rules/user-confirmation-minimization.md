@@ -1,0 +1,1 @@
+../../docs/rules/user-confirmation-minimization.md

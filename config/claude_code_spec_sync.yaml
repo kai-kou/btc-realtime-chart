@@ -1,0 +1,112 @@
+# Claude Code 仕様変更追随レーン（claude-code-spec-sync）設定
+#
+# SSOT: docs/rules/claude-code-spec-sync.md
+# 目的: Claude Code 本体のバージョンアップ（CHANGELOG/releases）を定期的にキャッチアップし、
+#       本プロジェクトの「ルール・スキル定義・ハーネス・設定」を最新仕様に追随させる。
+#
+# 分類ポリシー（ユーザー明示指示 2026-07-17・Issue #264）:
+#   - 破壊的変更（これまでのやり方がエラーになる類）→ 即対応 Issue（検知セッションが即修正）
+#   - 新機能・新設定 → 検証・検討フェーズ Issue（検証チェックリスト付きで起票 → 採用判定後に反映）
+#   - その他（バグ修正等）→ 起票しない（ログのみ・バージョンは既知化）
+
+# 検知対象（GitHub releases.atom）
+sources:
+  github_releases:
+    - "anthropics/claude-code"
+
+# プレリリース除外マーカー
+github_prerelease_markers: ["rc", "alpha", "beta", "preview", "dev", "nightly", "-pre"]
+
+# releases.atom が取得不可の場合のフォールバック
+# （クラウドプロキシはスコープ外リポジトリの github.com を 403 にするが、
+#   raw.githubusercontent.com は通る・2026-07-17 実測）
+changelog_fallback:
+  branch: "main"
+  path: "CHANGELOG.md"
+  max_versions: 10   # 先頭（最新）からこの数だけ読む（初回・長期停止後の暴発防止）
+
+# 破壊的変更キーワード（changelog 行にこのいずれかを含むと「即対応」分類。大文字小文字無視）
+breaking_keywords:
+  - "breaking"
+  - "deprecat"          # deprecated / deprecation
+  - "removed"
+  - "remove support"
+  - "no longer"
+  - "renamed"
+  - "replaced by"
+  - "now requires"
+  - "must now"
+  - "dropped"
+  - "disabled by default"
+  - "changed the default"
+  - "default changed"
+  - "changed default"
+  - "incompatible"
+  - "migration required"
+  - "will be removed"
+  - "to be ignored"       # 「これまで有効だった設定/挙動が今後は無視される」型（v2.1.257 #548 で取りこぼし発覚）
+  - "revert"              # 「前バージョンの変更を打ち消した」型。挙動が戻る＝既存の回避策・lesson が陳腐化する（v2.1.260 の deny 適用 revert を取りこぼし・#558）
+  # revert の同義語（#561・辞書の逐次追加はいたちごっこなので同義語群をまとめて先取りする）。
+  # 過去形・受動態のフレーズに限定する: 動詞原形の "roll back" / "rolling back" / "undo" は
+  # 「ロールバック機能」「undo/redo 機能」の新機能紹介文（例:「Added the ability to roll back edits」）
+  # と衝突し誤検知率が高いため、いずれも採用しない（レビュー指摘・#561）。
+  - "rolled back"
+  - "restored the previous"
+  - "restored the prior"
+  - "undid the"
+
+# 新機能・新設定キーワード（「検証・検討」分類。breaking が優先）
+feature_keywords:
+  - "added"
+  - "add "
+  - "new "
+  - "introduc"          # introduce / introducing
+  - "support for"
+  - "now supports"
+  - "you can now"
+  - "enabled by default"
+  - "beta:"
+  - "experimental"
+
+# 本プロジェクトへの関連ヒント（changelog 行にマッチした場合、Issue 本文に影響領域として注記する。
+# 分類には使わない＝取りこぼし防止のため関連ヒント無しでも起票する）
+project_area_hints:
+  hooks: ["hook", "sessionstart", "posttooluse", "pretooluse", "stop hook", "postcompact", "userpromptsubmit"]
+  skills: ["skill", "slash command", "SKILL.md", "/command", "commands"]
+  agents: ["subagent", "sub-agent", "agent team", "agents", "task tool"]
+  settings: ["settings.json", "setting", "permission", "sandbox", "env", "allowlist", "deny"]
+  mcp: ["mcp"]
+  memory_rules: ["claude.md", "memory", "rules", "output style", "output-style"]
+  headless: ["headless", "claude -p", "--print", "sdk", "print mode"]
+  model: ["model", "opus", "sonnet", "haiku", "fable", "effort", "thinking"]
+  context: ["compact", "context", "token"]
+  plugin: ["plugin", "marketplace"]
+
+# HTTP 設定（Cloudflare WAF error 1010 回避）
+http:
+  timeout_sec: 15
+  user_agent: "curl/8.5.0"
+
+# Issue 起票設定
+issue:
+  # bootstrap.sh がプレースホルダを置換する。未置換（本リポジトリ自身）の場合は
+  # tools/repo_slug.py が git remote から動的導出する（#215）
+  repo: "__OWNER__/__REPO__"
+  # 破壊的変更（即対応）Issue
+  breaking:
+    title_prefix: "[CC-Sync][破壊的変更]"
+    labels: ["lane:claude-code-spec", "type:improvement", "status:waiting-claude", "sp:2"]
+  # 新機能・新設定（検証・検討）Issue
+  feature:
+    title_prefix: "[CC-Sync][検証]"
+    labels: ["lane:claude-code-spec", "type:improvement", "status:waiting-claude", "sp:2"]
+  # dedup: 直近の同レーン Issue 本文の <!-- ccs-ver: --> マーカーで二重起票を防ぐ
+  dedup_labels: ["lane:claude-code-spec"]
+  dedup_lookback_hours: 336   # 14日（消化が遅れるケースの取りこぼし防止）
+
+# 1 回の起票でまとめる最大バージョン数（ノイズ抑制・バッチ）
+max_versions_per_issue: 8
+
+# 状態ファイル（検知済みリリース id を保持して二重処理を防ぐ）
+state_file: "config/claude_code_spec_state.json"
+max_known_entries: 400

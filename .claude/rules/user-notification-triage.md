@@ -1,0 +1,1 @@
+../../docs/rules/user-notification-triage.md

@@ -1,0 +1,108 @@
+{
+  "_comment": "native-first フォールバック機構の capability レジストリ（SSOT ルール: docs/rules/native-fallback-rules.md・Issue #198）。派生リポジトリはこのファイルを直接編集せず tools/native_capabilities.local.json（配布対象外・再適用で上書きされない）に追記・上書きする。",
+  "schema_version": 1,
+  "categories": {
+    "native-default": "ネイティブが既定経路。claude -p はフォールバックとして休眠存置（Web が追いつき済み or 最初からネイティブ）",
+    "gap-fallback": "ネイティブが本環境で未提供（Web ギャップ）。probe/実試行が成功するようになった時点で自動的にネイティブへ切替わる",
+    "isolation-by-design": "隔離セッション・タイムアウト制御等が本質的に必要なため claude -p が設計上の一次経路（Web ギャップ代替ではない。自動切替・撤去の対象外）",
+    "substrate": "フォールバック基盤そのものの可用性（claude CLI / -p フラグ）"
+  },
+  "route_status": {
+    "preferred": "既定で最初に試す経路（native.routes に必ず 1 つ以上置く）",
+    "available": "使えるが既定ではない（preferred が失敗したときの次段）",
+    "unavailable": "既知の不可。削除せず detail に「いつ・どのバージョン・どのエラーで閉じたか」を残す",
+    "unknown": "未検証。試して確かめ、結果を status に反映する"
+  },
+  "_routes_comment": "native.routes は起動経路 ladder（docs/rules/native-fallback-rules.md §2.5・Issue #372）。kind は skill / workflow / session-tool / builtin-command / cli、必須キーは kind と how。ネイティブ機能は「どのツールから呼ぶか」がバージョンで移動するため（例: /deep-research が v2.1.218 で Skill 経由 → Workflow 経由へ）、単一の how に固定せず順序付きで台帳化する。試行順は `python3 tools/native_fallback.py routes <id>` で確認する。",
+  "capabilities": [
+    {
+      "id": "claude-headless",
+      "category": "substrate",
+      "summary": "claude -p（headless CLI）フォールバック基盤の可用性",
+      "native": {
+        "how": "claude CLI（headless）",
+        "probes": [
+          {"type": "cli"},
+          {"type": "cli-flag", "flag": "-p"}
+        ]
+      },
+      "fallback": null,
+      "notes": "このプローブが fallback 判定になった環境（L-117 のタスクモード等で CLI 不在）では claude -p フォールバック自体が不可。スキル固有の最終手段（fan-out・DIY 等）へ直行する"
+    },
+    {
+      "id": "discussion-review",
+      "category": "native-default",
+      "summary": "議論型レビュー（ネイティブ Agent Teams: name 付き Agent + SendMessage + ホワイトボード）",
+      "native": {
+        "how": "skill:discussion-review（.claude/skills/discussion-review/SKILL.md）",
+        "routes": [
+          {"kind": "skill", "name": "discussion-review", "status": "preferred",
+           "how": "Skill(skill=\"discussion-review\", args=\"<議題・対象>\")",
+           "detail": "project スコープの自前スキル。bundled 置換のため disable-model-invocation を付けない運用（付けると自律起動不能になる）"},
+          {"kind": "session-tool", "name": "SendMessage", "status": "available",
+           "how": "name 付き background Agent + SendMessage + 共有ホワイトボードを直接組む",
+           "detail": "スキル経路が使えないとき、同等構成を手組みする（SKILL.md の手順を参照）"}
+        ],
+        "probes": [
+          {"type": "project-skill", "skill": "discussion-review"},
+          {"type": "session-tool", "tool": "SendMessage"}
+        ]
+      },
+      "fallback": {
+        "kind": "claude-p",
+        "how": "python3 tools/run_discussion_review.py --id <id> --spec <spec> --targets \"<t1,t2>\" --rounds 2",
+        "final": "fan-out（Agent 並列の独立評価）へ最終退避"
+      },
+      "notes": "Phase 2 でネイティブ既定化済み（docs/proposals/native-agent-teams-migration.md）。退避時は理由 1 行ログ必須"
+    },
+    {
+      "id": "deep-research-interactive",
+      "category": "native-default",
+      "summary": "ディープリサーチの対話起動（research-runner Step 3a・ビルトイン /deep-research を Workflow ツールで直接呼び出し）",
+      "native": {
+        "how": "Workflow tool: deep-research（ビルトイン Workflow）",
+        "routes": [
+          {"kind": "skill", "name": "deep-research", "status": "unavailable",
+           "how": "Skill(skill=\"deep-research\", args=\"<質問文>\")",
+           "detail": "CLI v2.1.218 で disable-model-invocation 化され不可。失敗シグネチャ: 'cannot be used with Skill tool due to disable-model-invocation'（実機検証 2026-07-29 / v2.1.220・#370）"},
+          {"kind": "workflow", "name": "deep-research", "status": "preferred",
+           "how": "Workflow({name: \"deep-research\", args: \"<質問文>\"})",
+           "detail": "現行の正しい対話起動経路（run 起動・複数エージェントの phase 進行を実測確認・#370）"}
+        ],
+        "probes": [
+          {"type": "builtin-command", "command": "/deep-research"}
+        ]
+      },
+      "fallback": {
+        "kind": "claude-p",
+        "how": "python3 tools/run_deep_research_workflow.py（Step 3b と同一スクリプト）",
+        "final": "DIY（WebSearch/WebFetch・research-runner SKILL.md のエンジン選択ポリシー。外部 LLM API は使わない）"
+      },
+      "notes": "2026-07-03 にクラウドでも直接実行可能と確認（Web ギャップ解消の実例）。2026-07-29 に起動経路が Skill → Workflow へ移動（#370・#372）。エンジン選択の SSOT は research-runner SKILL.md"
+    },
+    {
+      "id": "deep-research-batch",
+      "category": "isolation-by-design",
+      "summary": "ディープリサーチの自律・バッチ起動（research-runner Step 3b）",
+      "native": null,
+      "fallback": {
+        "kind": "claude-p",
+        "how": "python3 tools/run_deep_research_workflow.py --id <ID>（claude -p が設計上の一次経路）",
+        "final": "DIY（WebSearch/WebFetch。外部 LLM API は使わない）"
+      },
+      "notes": "コンテキスト隔離・90 分タイムアウト・レート枠検出（EXIT=6）が本質的に必要なため claude -p を維持（native-agent-teams-migration.md §2.2）。Web ギャップ代替ではない"
+    },
+    {
+      "id": "skill-eval",
+      "category": "isolation-by-design",
+      "summary": "スキル評価・description 最適化（skill-creator の run_eval.py / improve_description.py）",
+      "native": null,
+      "fallback": {
+        "kind": "claude-p",
+        "how": ".claude/skills/skill-creator/scripts/run_eval.py ほか（claude -p が設計上の一次経路）",
+        "final": null
+      },
+      "notes": "トリガー精度測定にはハーネス非汚染のクリーンな独立セッションが本質的に必要。Web ギャップ代替ではない"
+    }
+  ]
+}

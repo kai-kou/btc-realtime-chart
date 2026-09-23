@@ -1,0 +1,1 @@
+../../docs/rules/agent-team-summary.md

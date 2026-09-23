@@ -1,0 +1,184 @@
+{
+  "model": "sonnet",
+  "outputStyle": "concise-neko",
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Skill",
+      "Bash(sleep:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(git checkout:*)",
+      "Bash(bash -n:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(wc:*)",
+      "Bash(stat:*)",
+      "Bash(file:*)",
+      "Bash(basename:*)",
+      "Bash(dirname:*)",
+      "Bash(realpath:*)",
+      "Bash(which:*)",
+      "Bash(date:*)",
+      "Bash(pwd)",
+      "Bash(git ls-files:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git ls-remote:*)",
+      "Bash(git remote -v)",
+      "Bash(gh:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(python3:*)",
+      "Bash(pip3:*)",
+      "Read(.claude)",
+      "Read(.github)",
+      "Read(docs)",
+      "Read(CLAUDE.md)",
+      "Read(tools)",
+      "Edit(.claude)",
+      "Edit(.github)",
+      "Edit(docs)",
+      "Edit(CLAUDE.md)",
+      "Edit(tools)",
+      "Write(.claude)",
+      "Write(.github)",
+      "Write(docs)",
+      "Write(tools)",
+      "WebSearch",
+      "WebFetch",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "mcp__github__actions_list",
+      "mcp__github__add_comment_to_pending_review",
+      "mcp__github__add_issue_comment",
+      "mcp__github__add_reply_to_pull_request_comment",
+      "mcp__github__create_branch",
+      "mcp__github__create_or_update_file",
+      "mcp__github__create_pull_request",
+      "mcp__github__get_file_contents",
+      "mcp__github__get_me",
+      "mcp__github__issue_read",
+      "mcp__github__issue_write",
+      "mcp__github__list_branches",
+      "mcp__github__list_commits",
+      "mcp__github__list_issue_fields",
+      "mcp__github__list_issues",
+      "mcp__github__list_pull_requests",
+      "mcp__github__merge_pull_request",
+      "mcp__github__pull_request_read",
+      "mcp__github__pull_request_review_write",
+      "mcp__github__push_files",
+      "mcp__github__resolve_review_thread",
+      "mcp__github__search_code",
+      "mcp__github__search_issues",
+      "mcp__github__sub_issue_write",
+      "mcp__github__subscribe_pr_activity",
+      "mcp__github__unresolve_review_thread",
+      "mcp__github__unsubscribe_pr_activity",
+      "mcp__github__update_pull_request"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/*.p12)",
+      "Read(**/credentials*)",
+      "Read(**/id_rsa)",
+      "Read(**/id_ed25519)",
+      "Read(**/.aws/**)",
+      "Read(**/*service-account*.json)",
+      "Read(**/.git-credentials)",
+      "Read(**/.netrc)",
+      "Write(.claude/settings.local.json)",
+      "Edit(.claude/settings.local.json)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "network": {
+      "allowedDomains": [
+        "github.com",
+        "api.github.com",
+        "raw.githubusercontent.com",
+        "slack.com",
+        "api.slack.com",
+        "api.anthropic.com",
+        "mcp.context7.com",
+        "context7.com",
+        "api.cloudflare.com",
+        "registry.npmjs.org",
+        "pypi.org",
+        "files.pythonhosted.org"
+      ]
+    },
+    "excludedCommands": [
+      "*tools/fetch_broker_secrets.sh*",
+      "*tools/setup_secrets_broker.sh*",
+      "python3 *tools/verify_broker_migration.py*",
+      "python3 *tools/finalize_broker_migration.py*",
+      "python *tools/verify_broker_migration.py*",
+      "python *tools/finalize_broker_migration.py*",
+      "timeout * python3 *tools/verify_broker_migration.py*",
+      "timeout * python3 *tools/finalize_broker_migration.py*",
+      "timeout * python *tools/verify_broker_migration.py*",
+      "timeout * python *tools/finalize_broker_migration.py*"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh" } ] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [
+        { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/user-prompt-submit-guard.sh" },
+        { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/prompt-structuring.sh" },
+        { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/orchestrator-directive.sh" }
+      ] }
+    ],
+    "PermissionRequest": [
+      { "matcher": "Read|Write|Edit|NotebookEdit", "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/permission-request-auto-allow.sh" } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Bash|mcp__github__create_pull_request", "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/pre-tool-use-router.sh" } ] },
+      { "matcher": "mcp__github__merge_pull_request", "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/pre-merge-layer1-check.sh" } ] }
+    ],
+    "PostToolUse": [
+      { "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-use-validate.sh" } ] },
+      { "matcher": "mcp__github__merge_pull_request", "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-merge-publish-check.sh", "timeout": 90 } ] },
+      { "matcher": "mcp__github__pull_request_review_write", "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-review-write-mark.sh" } ] },
+      { "matcher": "mcp__github__create_pull_request|mcp__github__list_pull_requests", "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-pr-confirm-mark.sh" } ] }
+    ],
+    "PostToolUseFailure": [
+      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-use-failure.sh" } ] }
+    ],
+    "PreCompact": [
+      { "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact.sh" } ] }
+    ],
+    "PostCompact": [
+      { "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-compact.sh" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/stop-router.sh" } ] }
+    ],
+    "SubagentStop": [
+      { "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/subagent-stop.sh" } ] }
+    ]
+  }
+}

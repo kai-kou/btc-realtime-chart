@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/research_schema.json",
+  "title": "Deep Research Result Schema",
+  "description": "Deep Research の構造化出力スキーマ。research-runner がネイティブ /deep-research（直接呼び出し・claude -p サブプロセス）/ DIY 各エンジンの結果をこのスキーマに正規化する。docs/rules/research-rules.md と整合する。",
+  "type": "object",
+  "required": [
+    "research_id",
+    "theme",
+    "generated_at",
+    "engine",
+    "sections",
+    "official_names",
+    "sources",
+    "fact_check_flags",
+    "metrics"
+  ],
+  "properties": {
+    "research_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{1,64}$",
+      "description": "リサーチ識別子（任意の slug）。例: my-topic, V143, 2026-q2-market"
+    },
+    "theme": {
+      "type": "string",
+      "minLength": 5,
+      "description": "リサーチテーマの題名"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 のタイムスタンプ（JST）"
+    },
+    "engine": {
+      "type": "string",
+      "enum": ["claude-deep-research-workflow", "diy-sonnet-websearch"],
+      "description": "実行エンジン。claude-deep-research-workflow（ネイティブ /deep-research）が主・DIY（WebSearch/WebFetch）が最終フォールバック"
+    },
+    "engine_version": {
+      "type": "string",
+      "description": "実行モデル識別子（エイリアス既定。例: opus, sonnet。ピン留め時は claude-opus-5 等の full ID）"
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 7,
+      "description": "リサーチ本文。プロンプトの 5〜7 必須調査項目に対応",
+      "items": {
+        "type": "object",
+        "required": ["heading", "body_markdown", "source_ids"],
+        "properties": {
+          "heading": {
+            "type": "string",
+            "description": "セクション見出し（Markdown の H2 相当）"
+          },
+          "body_markdown": {
+            "type": "string",
+            "minLength": 100,
+            "description": "セクション本文（Markdown）。各事実情報に [A]/[B]/[C] タグと出典 URL を併記する"
+          },
+          "source_ids": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "本文で参照した sources[].id の一覧"
+          }
+        }
+      }
+    },
+    "official_names": {
+      "type": "array",
+      "description": "正式名称確認リスト（research-rules.md 必須）",
+      "items": {
+        "type": "object",
+        "required": ["term", "official", "source_id"],
+        "properties": {
+          "term": {"type": "string", "description": "確認対象（製品・人物・企業）"},
+          "official": {"type": "string", "description": "公式の正式表記"},
+          "japanese": {"type": "string", "description": "日本語表記（任意）"},
+          "source_id": {"type": "string", "description": "sources[].id 参照"}
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 8,
+      "description": "全出典のフラットリスト",
+      "items": {
+        "type": "object",
+        "required": ["id", "url", "title", "rank"],
+        "properties": {
+          "id": {"type": "string", "description": "セクション内参照キー（例: s001, s002）"},
+          "url": {"type": "string", "format": "uri"},
+          "title": {"type": "string"},
+          "publisher": {"type": "string"},
+          "published_at": {"type": "string", "description": "公開日（任意・ISO 8601）"},
+          "rank": {
+            "type": "string",
+            "enum": ["A", "B", "C"],
+            "description": "research-rules.md の情報ランク"
+          },
+          "language": {"type": "string", "enum": ["en", "ja", "other"]},
+          "alive_check": {
+            "type": "object",
+            "description": "URL 死活チェック結果（lint_research_files.py 拡張）",
+            "properties": {
+              "status_code": {"type": "integer"},
+              "checked_at": {"type": "string", "format": "date-time"}
+            }
+          }
+        }
+      }
+    },
+    "fact_check_flags": {
+      "type": "array",
+      "description": "未確認・要レビュー事項。5 件未満が品質ゲート閾値（fact-checker SKILL.md と整合）",
+      "items": {
+        "type": "object",
+        "required": ["claim", "rank", "reason"],
+        "properties": {
+          "claim": {"type": "string", "description": "確認すべき主張（例: ARR $25億ペース）"},
+          "rank": {"type": "string", "enum": ["A", "B", "C"]},
+          "reason": {"type": "string", "description": "フラグを立てた理由"},
+          "source_id": {"type": "string"}
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "観測層用メトリクス。Slack Canvas 週次レポートで集計",
+      "required": ["duration_seconds", "cost_usd"],
+      "properties": {
+        "duration_seconds": {"type": "number"},
+        "cost_usd": {"type": "number", "description": "本タスクの実コスト USD"},
+        "search_count": {"type": "integer", "description": "実行検索回数（DR Max は ~160、DIY は 5〜15）"},
+        "input_tokens": {"type": "integer"},
+        "output_tokens": {"type": "integer"},
+        "rank_distribution": {
+          "type": "object",
+          "properties": {
+            "A": {"type": "integer"},
+            "B": {"type": "integer"},
+            "C": {"type": "integer"}
+          }
+        }
+      }
+    }
+  }
+}

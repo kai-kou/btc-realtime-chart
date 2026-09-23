@@ -1,0 +1,1 @@
+../../docs/rules/session-safety-rules.md

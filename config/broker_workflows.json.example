@@ -1,0 +1,11 @@
+{
+  "_comment": "verify_broker_migration.py のワークフロー別チェックリスト。このファイルを config/broker_workflows.json にコピーし、自プロジェクトのワークフロー→必要キーに差し替える。ファイルが無い/空でも parity ゲートは動作する（チェックリスト表示のみスキップ）。値ではなく環境変数のキー名だけを書く。",
+  "example-workflow-A": [
+    "EXAMPLE_API_KEY",
+    "EXAMPLE_TOKEN"
+  ],
+  "example-workflow-B（Slack 通知）": [
+    "SLACK_BOT_TOKEN",
+    "SLACK_CHANNEL_ID"
+  ]
+}

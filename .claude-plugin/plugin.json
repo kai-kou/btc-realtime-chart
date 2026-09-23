@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "tsukuru",
+  "description": "白紙のアイデアを対話で要件定義・技術選定へ落とし、実装からリリースまでを自律運転へ橋渡しする、Claude Code のサービス・ツール作成特化基盤（claude-code-repository-base の下流）。",
+  "author": {
+    "name": "kai-kou",
+    "url": "https://github.com/kai-kou"
+  },
+  "homepage": "https://github.com/kai-kou/btc-realtime-chart",
+  "repository": "https://github.com/kai-kou/btc-realtime-chart",
+  "keywords": [
+    "claude-code",
+    "autonomous",
+    "requirements",
+    "upstream",
+    "template",
+    "agent-teams"
+  ],
+  "skills": "./.claude/skills/",
+  "agents": [
+    "./.claude/agents/owner.md"
+  ]
+}

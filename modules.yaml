@@ -1,0 +1,241 @@
+# modules.yaml — claude-code-base の機能モジュール定義
+#
+# このベースは「全部入りで配布し、プロジェクトごとに不要なものを外す（opt-out）」方式。
+# 各モジュールは互いに疎結合で、不要なら enabled: false にして bootstrap.sh で除去できる。
+# core は外せない（自律運用の土台）。
+#
+# 使い方:
+#   1. このファイルで不要なモジュールを enabled: false にする
+#   2. scripts/bootstrap.sh を実行する（プレースホルダ置換 + 無効モジュールの除去）
+
+project:
+  name: "tsukuru"
+  repo: "kai-kou/btc-realtime-chart"          # owner/repo（gh / tools が参照）
+  timezone: "Asia/Tokyo"  # 例: "Asia/Tokyo"。空なら UTC（session-start の PROJECT_TZ）
+
+modules:
+  # ── 土台（必須・外せない）──────────────────────────────
+  core-principles:
+    enabled: true
+    required: true
+    description: "CP-1〜6 大原則・自律運用ポリシー・確認最小化・通知トリアージ"
+    rules:
+      - core-principles.md
+      - autonomous-operation-policy.md
+      - user-confirmation-minimization.md
+      - user-notification-triage.md
+      - problem-investigation-protocol.md
+
+  session-safety:
+    enabled: true
+    required: true
+    description: "ユーザー確認前コミット・圧縮対応・マルチセッション競合防止・スプリント運用"
+    rules:
+      - session-safety-rules.md
+      - session-compression-rules.md
+      - session-concurrency-rules.md
+      - session-sprint-rules.md
+      - user-instruction-issue-rules.md
+      - progress-reporting-rules.md
+    skills:
+      - apply-base   # 自然文「claude-code-base を反映して」で適用・再同期を起動（対象へ伝播し再同期に使う）
+    hooks:
+      - session-start.sh
+      - post-compact.sh
+      - stop-router.sh
+      - stop-git-check.sh
+      - stop-slack-notify.sh
+      - stop-completion-report-check.sh
+      - subagent-stop.sh
+      - permission-request-auto-allow.sh
+    tools:
+      - check_rules_sync.sh
+      - github_push_helper.py
+      - generate_project_context.py
+      - sprint_session_metrics.py
+      - half_day_summary.py
+      - calc_daily_cost.py
+      - progress_heartbeat.sh
+      - yaml_utils.py
+
+  # ── PR / レビュー自動化 ────────────────────────────────
+  pr-review:
+    enabled: true
+    description: "PR 作成 → AI レビュー → 指摘対応 → 自動マージのフロー一式"
+    rules:
+      - pr-review-flow.md
+      - pr-review-flow-summary.md
+      - ai-reviewer-strategy.md
+    hooks:
+      - pre-tool-use-router.sh
+      - pre-git-push-check.sh
+      - pre-pr-create-check.sh
+      - post-pr-confirm-mark.sh   # PR 存在確認済みマーカー（stop-pr-check.sh の毎ターン差し戻しを抑止・#543）
+      - post-tool-use-failure.sh
+      - post-tool-use-validate.sh
+    skills:
+      - pr-review-watcher
+      - self-reviewer
+      - code-review   # 組み込み /code-review の置き換え（同名 project スキルが bundled をオーバーライド・自律起動可）
+    tools:
+      - check_pending_pr_reviews.py
+      - poll_pr_reviews.sh
+      - pr_review_heartbeat.sh
+      - test_pr_confirm_marker.sh   # post-pr-confirm-mark.sh × stop-pr-check.sh の e2e（#543）
+      - self_review_check.py
+      - test_self_review_check.sh   # Layer 0 構文検査・対応テスト自動実行の回帰テスト（#627）
+      - record_layer1_findings.py   # Layer 1 / PR 前レビューの結果を JSONL に追記（計測・#627 対策 E）
+      - layer1_findings_report.py   # 同 JSONL の週次集計（指摘ゼロ PR 率・同種指摘候補・#627 対策 E）
+      - test_pre_pr_create_check.sh # PR 本文の検証証跡チェックの回帰テスト（#627）
+      - detect_pr_diff_type.py
+      - analyze_pr_review_comments.py
+      - pr_review_trends.py
+
+  # ── プロジェクト管理 / 衛生 ───────────────────────────
+  project-management:
+    enabled: true
+    description: "Issue / ラベル / マイルストーン管理・リポジトリ衛生・waiting-user トリアージ"
+    skills:
+      - project-manager
+      - project-sync
+      - waiting-user-handler
+      - workflow-health-check
+    tools:
+      - pipeline_state.py
+      - log_hygiene_snapshot.py
+      - backfill_sp_labels.py
+
+  # ── 改善ループ ────────────────────────────────────────
+  improvement-loop:
+    enabled: true
+    description: "KPT 振り返り・改善 Try の実行・プロジェクト横断レビュー・教訓管理"
+    rules:
+      - retrospective-rules.md
+      - lessons-management.md
+      - lessons-core.md
+      - harness-escalation.md
+      - improvement-lane-map.md
+    skills:
+      - retrospective
+      - retro-try-handler
+      - self-improvement-loop
+      - checkpoint
+      - skill-creator
+    tools:
+      - lessons_guard.py
+      - lessons_scorer.py
+      - prune_lessons.py
+      - split_lessons.py
+      - triage_improvements.py
+
+  # ── リサーチ自動化（任意）──────────────────────────────
+  research-runner:
+    enabled: true
+    description: "Deep Research 自動実行（ネイティブ /deep-research 主・claude -p → DIY フォールバック）"
+    rules:
+      - research-rules.md
+    skills:
+      - research-runner
+    tools:
+      - run_deep_research.py
+      - run_deep_research_workflow.py
+      - research_schema.json
+
+  # ── Agent Teams / サブエージェント ────────────────────
+  agent-teams:
+    enabled: true
+    description: "サブエージェント・Agent Teams 活用ガイド・憲法・議論型レビュー（ネイティブ Agent Teams + ホワイトボード。claude -p 経路はフォールバック）"
+    rules:
+      - agent-team.md
+      - agent-team-summary.md
+      - agent-constitution.md
+      - token-optimization-rules.md
+      - claude-code-optimization.md
+      - discussion-whiteboard-rules.md
+    skills:
+      - discussion-review
+    tools:
+      - discussion_whiteboard.py
+      - run_discussion_review.py
+      - discussion_review_trigger.py
+      - discussion_specs/example_debate.json
+      - discussion_specs/code_review.json
+      - discussion_specs/claude_only_review.json
+      - discussion_specs/copilot_removal_audit.json
+      - discussion_specs/karpathy_adoption.json
+      - discussion_specs/loop_engineering_analysis.json
+      - discussion_specs/pdf_anthropic_teams_adoption.json
+      - discussion_specs/prompt_structuring_design.json
+      - discussion_specs/skill_inventory_audit.json
+      - discussion_specs/sp_estimation_redesign.json
+      - discussion_specs/workflow_base_audit.json
+
+  # ── ベース還流（任意・ベースリポジトリ側での運用が前提）──
+  base-harvest:
+    enabled: true
+    description: "apply-base の逆方向。下流リポジトリの汎用ハーネス改善を開発 SSOT（ベース）リポジトリへ還流する（実行はベース側セッションが前提のため、下流リポジトリでは通常 enabled:false で prune してよい）"
+    skills:
+      - base-harvest
+
+  # ── Claude Code 仕様追随（任意）────────────────────────
+  claude-code-spec-sync:
+    enabled: true
+    description: "Claude Code 本体のバージョンアップ検知と内部資産（rules/skills/hooks/settings）の仕様追随（設定: config/claude_code_spec_sync.yaml・state: config/claude_code_spec_state.json）"
+    rules:
+      - claude-code-spec-sync.md
+    skills:
+      - claude-code-spec-sync
+    tools:
+      - check_claude_code_updates.py
+
+  # ── ネイティブ優先フォールバック（CLI/Web リリースギャップ対応）──
+  native-fallback:
+    enabled: true
+    description: "Web 未提供機能の native-first 判定と claude -p フォールバック共通機構（probe・安全ラッパー・capability 台帳）"
+    rules:
+      - native-fallback-rules.md
+    tools:
+      - native_fallback.py
+      - native_capabilities.json
+
+  # ── 外部連携（任意・opt-out しやすい）─────────────────
+  slack-notify:
+    enabled: true
+    description: "Slack 通知（トークン未設定なら無音スキップ）"
+    rules:
+      - slack-notification-rules.md
+    tools:
+      - slack_notify.py
+      - triage_notification.py
+
+  github-variables:
+    enabled: true
+    description: "GitHub Repository Variables での env 一元管理"
+    rules:
+      - env-vars.md
+    tools:
+      - gh_vars.py
+      - setup_github_variables.py
+      - mask_secrets.py
+
+  ci-helpers:
+    enabled: true
+    description: "GitHub Actions CI の結果集計・注釈出力ヘルパー"
+    tools:
+      - ci_combine_results.py
+      - ci_count_failures.py
+      - ci_print_annotations.py
+      - ci_print_summary.py
+
+  # ── 横断ガイド（ルールのみ）────────────────────────────
+  guides:
+    enabled: true
+    description: "MCP フォールバック・LFS 安全・サンドボックス・セキュリティ・API 利用・動的ワークフロー"
+    rules:
+      - github-mcp-fallback-patterns.md
+      - git-lfs-safety-rules.md
+      - sandbox-rules.md
+      - security-posture-controls.md
+      - claude-api-usage-rules.md
+      - dynamic-workflows-rules.md
+      - self-review-checklist.md

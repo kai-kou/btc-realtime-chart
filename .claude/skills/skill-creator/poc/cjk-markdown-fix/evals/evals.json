@@ -1,0 +1,17 @@
+{
+  "skill_name": "cjk-markdown-fix-poc",
+  "checker": "tools/check_cjk_markdown.py",
+  "note": "決定論的採点版 body 最適化ループ（run_body_loop.py）の PoC eval セット。expected_output は使わず、checker の exit code のみで pass/fail を判定する。",
+  "evals": [
+    {"id": 1, "category": "bold", "input_text": "これは**重要**です"},
+    {"id": 2, "category": "code", "input_text": "これは`コード`です"},
+    {"id": 3, "category": "bold", "input_text": "「**強調**」の話"},
+    {"id": 4, "category": "code", "input_text": "値は`x`、次は`y`です"},
+    {"id": 5, "category": "bold", "input_text": "英語 **bold** text"},
+    {"id": 6, "category": "bold", "input_text": "見出しの**注意点**を読む"},
+    {"id": 7, "category": "bold", "input_text": "**先頭**から始まる文章です"},
+    {"id": 8, "category": "code", "input_text": "関数`foo`を呼ぶ"},
+    {"id": 9, "category": "code", "input_text": "変数`bar`と`baz`を使う"},
+    {"id": 10, "category": "code", "input_text": "code `snippet` example"}
+  ]
+}

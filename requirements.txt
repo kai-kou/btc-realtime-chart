@@ -1,0 +1,7 @@
+# claude-code-base の汎用ツールが必要とする Python 依存（最小）
+# session-start.sh が requirements.txt を検出すると自動 pip install する。
+#
+# 最低 Python バージョン: 3.10+（`str | None` 等の記法・match 文を使用）
+# 外部依存は PyYAML のみ（yaml_utils.py / scripts/prune_modules.py / slack_notify.py が使用）。
+# その他の tools/*.py は標準ライブラリのみで動作する。
+PyYAML>=6.0

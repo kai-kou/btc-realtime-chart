@@ -1,0 +1,23 @@
+# publish 通知イベント定義（tools/slack_notify.py --type publish --event-type <key>）
+#
+# 汎用ベースの既定は最小構成（published のみ）。プロジェクト固有の公開イベント
+# （動画公開・SNS配信・マーケティングレビュー等）はこのファイルにキーを追記して定義する
+# （例は docs/rules/slack-notification-rules.md「project example」を参照）。
+#
+# 各イベントのフィールド:
+#   emoji         - 通知ヘッダーの絵文字（省略時 🔔）
+#   header        - 通知ヘッダーのテキスト（省略時 event-type のキー名）
+#   message       - 本文（{mention} プレースホルダに @mention テキストが展開される）
+#   action_label  - アクションボタンのラベル（省略時ボタンなし）
+#   action_url    - アクションボタンの URL。固定 URL か、`{url}` を含めると
+#                    --url で渡した値が展開される（null 可）
+#   fyi           - true でユーザー操作不要の完了報告扱いにし @mention を抑制する（既定 false）
+
+events:
+  published:
+    emoji: "🎉"
+    header: "公開完了"
+    message: "{mention}公開が完了しました。"
+    action_label: null
+    action_url: null
+    fyi: false
