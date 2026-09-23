@@ -70,3 +70,20 @@ test('ignores messages from a subscription that was replaced', async () => {
   old.handlers.onTrade({ timeSec: 70, price: 999, size: 1 });
   assert.notEqual(ctl.candles.at(-1).close, 999);
 });
+
+test('failover backs off exponentially while every feed keeps failing', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const a = fakeFeed('a', { fail: true });
+  const b = fakeFeed('b', { fail: true });
+  const { ctl, events } = harness([a, b]);
+  await ctl.start('1m');
+  const delays = [];
+  for (let i = 0; i < 8; i++) {
+    const s = events.statuses.filter((x) => x.retryInMs != null).at(-1);
+    delays.push(s.retryInMs);
+    t.mock.timers.tick(s.retryInMs);
+    await new Promise((r) => setImmediate(r));
+  }
+  assert.deepEqual(delays.slice(0, 4), [500, 1000, 2000, 4000]);
+  assert.equal(Math.max(...delays), 30000);
+});

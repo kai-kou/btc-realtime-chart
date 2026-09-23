@@ -52,6 +52,13 @@ export function aggregate(candles, seconds) {
   return out;
 }
 
+// Number of candles newer than `time` (how many bars the chart has not drawn yet).
+export function countNewer(candles, time) {
+  let n = 0;
+  for (let i = candles.length - 1; i >= 0 && candles[i].time > time; i--) n++;
+  return n;
+}
+
 export function trimTo(candles, max) {
   return candles.length > max ? candles.slice(candles.length - max) : candles;
 }

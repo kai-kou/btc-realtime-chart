@@ -48,12 +48,12 @@ export class ChartView {
   }
 
   // Full redraw (history load, interval/feed change, gap refill).
-  setAll(candles, ind, signals) {
+  setAll(candles, ind, signals, { jump = true } = {}) {
     this.candles.setData(candles.map(toBar));
     this.volume.setData(candles.map(toVolume));
     this.#setIndicators(candles, ind);
     this.setSignals(signals);
-    this.jumpToLatest();
+    if (jump || this.following) this.jumpToLatest();
   }
 
   // Incremental update of the forming candle (called at most once per animation frame).

@@ -32,7 +32,7 @@ check('indicators shown', (await page.textContent('#rsi')) !== '—' && (await p
 check('AC-4 signals computed', true, `${s2.signals} signals, last: ${await page.textContent('#last-signal')}`);
 
 // AC-5: drop the socket and expect automatic reconnection back to LIVE.
-await page.evaluate(() => window.__btcChart.controller.sub.ws.close());
+await page.evaluate(() => window.__btcChart.dropSocket());
 await page.waitForFunction(() => window.__btcChart.state.status.state !== 'live', null, { timeout: 5000 }).catch(() => {});
 const t0 = Date.now();
 await page.waitForFunction(() => window.__btcChart.state.status.state === 'live' && Date.now() - window.__btcChart.state.status.lastTickAt < 3000, null, { timeout: 30000 });
@@ -66,7 +66,6 @@ await page2.goto(url, { waitUntil: 'load' });
 // Only the switch + history is asserted: this sandbox's egress proxy breaks Chromium's WebSocket
 // handshake to Coinbase (curl through the same proxy gets 101), so its live state is reported, not asserted.
 await page2.waitForFunction(() => window.__btcChart?.state.feed === 'coinbase' && window.__btcChart.state.candles >= 100, null, { timeout: 45000 });
-await page2.waitForTimeout(4000);
 const s3 = await page2.evaluate(() => window.__btcChart.state);
 check('AC-6 failover to secondary feed', s3.candles >= 100, `feed=${s3.feed} candles=${s3.candles} ws=${s3.status.state}`);
 await page2.evaluate(() => { try { localStorage.clear(); } catch {} });

@@ -4,6 +4,7 @@ import { createCoinbaseFeed } from './infra/coinbaseFeed.js';
 import { FeedController } from './app/feedController.js';
 import { computeIndicators, detectSignals } from './domain/signals.js';
 import { INTERVALS } from './domain/intervals.js';
+import { countNewer } from './domain/candles.js';
 import { ChartView } from './ui/chartView.js';
 import { PanelView } from './ui/panelView.js';
 
@@ -23,6 +24,7 @@ let ind = { bands: [], rsi: [] };
 let signals = [];
 let pendingFrame = false;
 let pendingSignals = false;
+let renderedTime = -Infinity; // time of the newest candle already drawn on the chart
 
 function recompute() {
   ind = computeIndicators(candles);
@@ -40,6 +42,7 @@ const controller = new FeedController(feeds, {
     recompute();
     signals = detectSignals(candles, ind);
     chart.setAll(candles, ind, signals);
+    renderedTime = candles.at(-1)?.time ?? -Infinity;
     panel.renderPrice(candles, ind, controller.feed.pair);
     panel.renderSignals(signals);
   },
@@ -51,7 +54,15 @@ const controller = new FeedController(feeds, {
     requestAnimationFrame(() => {
       pendingFrame = false;
       recompute();
-      chart.updateLast(candles, ind);
+      // series.update() can append only one bar; a burst that crossed several buckets
+      // (e.g. messages flushed after a background tab resumes) needs a full redraw.
+      if (countNewer(candles, renderedTime) > 1) {
+        signals = detectSignals(candles, ind);
+        chart.setAll(candles, ind, signals, { jump: false });
+      } else {
+        chart.updateLast(candles, ind);
+      }
+      renderedTime = candles.at(-1)?.time ?? renderedTime;
       panel.renderPrice(candles, ind, controller.feed.pair);
       if (pendingSignals) {
         pendingSignals = false;
@@ -115,5 +126,9 @@ const initialInterval = INTERVALS[store.get('interval', '1m')] ? store.get('inte
 for (const b of intervalBar.children) b.setAttribute('aria-pressed', String(b.dataset.interval === initialInterval));
 controller.start(initialInterval, initialFeed);
 
-// Test hook for the E2E check (read-only snapshot).
-window.__btcChart = { get state() { return { candles: candles.length, signals: signals.length, feed: controller.feed.id, status: panel.status }; }, controller };
+// Read-only snapshot + socket drop for the E2E check (e2e/smoke.mjs). Exposes no controls beyond
+// what a network blip would cause.
+window.__btcChart = Object.freeze({
+  get state() { return { candles: candles.length, signals: signals.length, feed: controller.feed.id, status: { ...panel.status } }; },
+  dropSocket: () => controller.sub?.ws?.close(),
+});

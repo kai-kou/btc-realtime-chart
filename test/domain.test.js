@@ -103,3 +103,12 @@ test('currentBias describes the forming candle', () => {
   assert.equal(currentBias(100, band, 50).level, 'neutral');
   assert.equal(currentBias(100, null, null).text, 'データ蓄積中');
 });
+
+test('countNewer counts bars the chart has not drawn yet', async () => {
+  const { countNewer } = await import('../src/domain/candles.js');
+  const cs = [c(60, 1), c(120, 1), c(180, 1)];
+  assert.equal(countNewer(cs, 180), 0);
+  assert.equal(countNewer(cs, 120), 1);
+  assert.equal(countNewer(cs, 60), 2);
+  assert.equal(countNewer(cs, -Infinity), 3);
+});

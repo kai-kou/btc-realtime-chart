@@ -38,7 +38,9 @@ export function createBinanceFeed({ symbol = 'BTCUSDT', fetchImpl = globalThis.f
         onStatus,
         onMessage: (raw) => {
           const m = parseMessage(raw);
-          if (m?.trade) onTrade(m.trade);
+          // Volume comes only from the kline snapshot: adding aggTrade sizes on top of it would
+          // double-count trades already included in the latest kline. Trades update price only.
+          if (m?.trade) onTrade({ ...m.trade, size: 0 });
           else if (m?.candle) onCandle(m.candle, m.exchangeTimeMs);
         },
       });

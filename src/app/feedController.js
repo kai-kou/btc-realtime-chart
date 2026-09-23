@@ -20,6 +20,7 @@ export class FeedController {
     this.sub = null;
     this.generation = 0;
     this.failures = 0;
+    this.failovers = 0; // consecutive failovers without a single tick: drives the backoff
     this.lastTickAt = 0;
     this.lastLatencyMs = null;
   }
@@ -87,6 +88,7 @@ export class FeedController {
 
   #touch(exchangeTimeMs) {
     this.failures = 0;
+    this.failovers = 0;
     this.lastTickAt = this.clock();
     if (exchangeTimeMs) this.lastLatencyMs = Math.max(0, this.lastTickAt - exchangeTimeMs);
     this.onStatus({ state: 'live', lastTickAt: this.lastTickAt, latencyMs: this.lastLatencyMs });
@@ -130,6 +132,10 @@ export class FeedController {
     this.failures = 0;
     this.hadConnection = false;
     this.feedIndex = (this.feedIndex + 1) % this.feeds.length;
-    setTimeout(() => this.start(this.interval), 500);
+    // Back off exponentially when every feed keeps failing, so an outage is not turned
+    // into an IP ban by hammering the exchanges (Binance bans on repeated 429/418).
+    const delay = Math.min(30000, 500 * 2 ** this.failovers++);
+    this.onStatus({ state: 'error', reason, feed: this.feed.id, retryInMs: delay });
+    setTimeout(() => this.start(this.interval), delay);
   }
 }
