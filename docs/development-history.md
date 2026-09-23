@@ -5,7 +5,7 @@ tsukuru（開発母艦 `kai-kou/tsukuru-studio` の公開テンプレート `kai
 第三者と同じ導入手順で 1 本のプロダクトを完走できるかの検証を兼ねている。
 
 - アプリ: https://btc-realtime-chart.kinamocchi-tech.workers.dev
-- 期間: 2026-09-23 13:20 JST 〜 14:10 JST（1 セッション）
+- 期間: 2026-09-23 13:20 JST 〜 14:09 JST（1 セッション・アプリ公開まで。本書と README の整備は 14:20 JST ごろ）
 
 ## 1. 依頼内容
 
@@ -40,7 +40,7 @@ flowchart LR
 | ② | 13:30〜13:50 | 上流工程（`upstream-flow`） | 依頼を要件へ落とし、取引所 API を実接続で調べてデータ源を決めた。Tier 1 判定で「アーキテクチャ定義書を作るか」を確認し、作ると決めた | `docs/product-brief.md` / `docs/architecture.md` / 調査結果 |
 | ③ | 13:50〜14:01 | 要件 PR | フレッシュ文脈のレビューで 4 件の指摘（うち 3 件採用）。受け入れ基準に AC-6 / AC-7 を追加 | [PR #1](https://github.com/kai-kou/btc-realtime-chart/pull/1) |
 | ④ | 14:01 | 実装 Issue | 要件と決定ログを転記して `sp:5` で起票 | [Issue #2](https://github.com/kai-kou/btc-realtime-chart/issues/2) |
-| ⑤ | 13:35〜14:08 | 実装・デプロイ | テスト先行でドメイン層を作り、取引所との接続・画面を実装。Cloudflare Workers にデプロイして、本番 URL に対して E2E を実行 | `src/` / `test/` / `e2e/` |
+| ⑤ | 13:30〜14:08 | 実装・デプロイ | テスト先行でドメイン層を作り、取引所との接続・画面を実装。Cloudflare Workers にデプロイして、本番 URL に対して E2E を実行。ドメイン層は方針の切り替え前に母艦で書き始めていたため、①〜③と並行して進み、このリポジトリへは移したうえで 13:59 にコミットした | `src/` / `test/` / `e2e/` |
 | ⑥ | 14:01〜14:09 | 実装 PR | 観点別の 2 系統レビュー（正しさ・堅牢性 / セキュリティ・性能）の指摘 7 件と、E2E で見つけた不具合 1 件に対応 | [PR #3](https://github.com/kai-kou/btc-realtime-chart/pull/3) |
 
 ## 3. 主な判断
