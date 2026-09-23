@@ -3,6 +3,7 @@
 - 実施日: 2026-09-23 JST
 - 深さ: light（要件がユーザーから具体的に提示済みで、論点はデータ源の選定に限られるため）
 - 方法: 公式ドキュメントの確認 + 実行環境からの実接続プローブ（REST の HTTP ステータス・WebSocket の受信実測）
+- 実測値の扱い: 2026-09-23 JST にクラウド実行環境（egress プロキシ経由）から 1 回ずつ計測した参考値。第三者の環境では地域・回線で結果が変わりうる
 
 ## 設問
 
@@ -14,7 +15,7 @@
 
 | 候補 | 過去足 REST | リアルタイム WS | 実測（2026-09-23） | 備考 |
 |---|---|---|---|---|
-| Binance（`api.binance.com` / `stream.binance.com`） | klines 最大 1000 本 | kline（2 秒間隔）+ aggTrade（約定ごと） | REST 451・WS 接続失敗 | 実行環境のリージョンで地域制限 |
+| Binance（`api.binance.com` / `stream.binance.com`） | klines 最大 1000 本 | kline（1 分足等は 2000ms 間隔・`1s` 足のみ 1000ms）+ aggTrade（Real-time） | REST 451・WS 接続失敗 | 実行環境のリージョンで地域制限 |
 | Binance 市場データ専用（`data-api.binance.vision` / `data-stream.binance.vision`） | klines 最大 1000 本 | 同上 | REST 200・WS 受信成功 | 市場データ専用の公開エンドポイント（取引 API なし） |
 | Coinbase Exchange（`api.exchange.coinbase.com` / `ws-feed.exchange.coinbase.com`） | candles 最大 300 本・4 時間足なし | matches（約定ごと） | REST 200・WS 5 件を 876ms で受信 | 認証不要。ローソク足はクライアントで約定から組み立てる |
 | bitFlyer Lightning（`api.bitflyer.com`） | 公式の OHLC REST なし | executions（約定ごと・JSON-RPC） | ticker REST 200 | 円建てだが初期表示の過去足が取れない |
